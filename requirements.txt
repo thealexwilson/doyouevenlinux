@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+aiohttp
+platformdirs
+typing-extensions
