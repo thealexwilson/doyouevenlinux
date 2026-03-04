@@ -1,28 +1,25 @@
 import os
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
 
-from vapor.api_interface import get_steam_user_data
-from vapor.exceptions import InvalidIDError, PrivateAccountError, UnauthorizedError
 from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
 
 load_dotenv()
 
+from vapor.api_interface import get_steam_user_data
+from vapor.exceptions import InvalidIDError, PrivateAccountError, UnauthorizedError
+
 app = FastAPI(title="doyouevenlinux")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 STEAM_API_KEY = os.environ.get("STEAM_API_KEY", "")
+TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
 
 
-@app.get("/")
-async def root():
-    return {"status": "doyouevenlinux is live"}
+@app.get("/", response_class=HTMLResponse)
+async def index():
+    html = (TEMPLATES_DIR / "index.html").read_text()
+    return HTMLResponse(content=html)
 
 
 @app.get("/api/check/{steam_id}")
@@ -37,7 +34,7 @@ async def check_library(steam_id: str):
     except UnauthorizedError:
         raise HTTPException(status_code=401, detail="Invalid Steam API key")
     except PrivateAccountError:
-        raise HTTPException(status_code=403, detail="Steam profile is private")
+        raise HTTPException(status_code=403, detail="Steam profile is private. Set your profile and game details to public.")
 
     games = [
         {

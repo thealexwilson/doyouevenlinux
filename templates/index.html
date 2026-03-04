@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>doyouevenlinux</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        min-height: 100vh;
+        background: #09090b;
+        color: #e4e4e7;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Header */
+      .site-header {
+        border-bottom: 1px solid #1a1a1e;
+        padding: 14px 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .site-header .logo-text { font-weight: 700; font-size: 15px; letter-spacing: -0.01em; }
+      .site-header .badge { font-size: 10px; color: #52525b; background: #18181b; padding: 2px 7px; border-radius: 4px; border: 1px solid #27272a; margin-left: 2px; }
+
+      .container { max-width: 1000px; margin: 0 auto; padding: 32px 20px; }
+
+      /* Landing */
+      .landing { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 420px; }
+      .landing h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.04em; color: #fafafa; line-height: 1.1; }
+      .landing h1 .accent { color: #22c55e; }
+      .landing .subtitle { color: #71717a; font-size: 15px; margin-top: 12px; line-height: 1.5; max-width: 460px; text-align: center; }
+      .landing .input-row { display: flex; gap: 8px; width: 100%; max-width: 480px; margin-top: 36px; }
+      .landing .hint { font-size: 11px; color: #3f3f46; margin-top: 14px; }
+
+      input[type="text"], input[type="search"] {
+        padding: 11px 14px;
+        border-radius: 8px;
+        border: 1px solid #27272a;
+        background: #18181b;
+        color: #e4e4e7;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.15s;
+        width: 100%;
+      }
+      input[type="text"]:focus, input[type="search"]:focus { border-color: #3f3f46; }
+
+      .btn-primary {
+        padding: 11px 24px;
+        border-radius: 8px;
+        border: none;
+        background: #22c55e;
+        color: #09090b;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: opacity 0.15s;
+        white-space: nowrap;
+      }
+      .btn-primary:hover { opacity: 0.85; }
+      .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+      .error-box {
+        margin-top: 16px;
+        padding: 10px 16px;
+        border-radius: 8px;
+        background: rgba(239,68,68,0.10);
+        border: 1px solid rgba(239,68,68,0.25);
+        color: #ef4444;
+        font-size: 13px;
+        max-width: 480px;
+        text-align: center;
+      }
+
+      /* Loading */
+      .loading-view { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 420px; gap: 16px; }
+      .spinner {
+        width: 36px; height: 36px;
+        border: 3px solid #27272a;
+        border-top-color: #22c55e;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .loading-view .msg { color: #a1a1aa; font-size: 14px; font-weight: 500; }
+      .loading-view .sub { color: #52525b; font-size: 12px; }
+
+      /* Results top bar */
+      .results-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+      .btn-back {
+        background: none; border: 1px solid #27272a; border-radius: 6px;
+        color: #a1a1aa; padding: 5px 10px; font-size: 12px; cursor: pointer;
+        display: flex; align-items: center; gap: 4px;
+      }
+      .btn-back:hover { border-color: #3f3f46; }
+      .steam-id-label { font-size: 13px; color: #52525b; }
+      .steam-id-label span { color: #a1a1aa; font-family: monospace; }
+      .avg-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #71717a; }
+
+      /* Stat cards */
+      .stat-row { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+      .stat-card {
+        flex: 1; min-width: 130px; padding: 14px 16px;
+        border-radius: 10px; background: #18181b; border: 1px solid #27272a;
+      }
+      .stat-card .label { font-size: 11px; color: #71717a; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+      .stat-card .value-row { display: flex; align-items: baseline; gap: 6px; }
+      .stat-card .value { font-size: 26px; font-weight: 700; line-height: 1; }
+      .stat-card .pct { font-size: 12px; color: #52525b; }
+      .stat-card .bar { margin-top: 8px; height: 3px; border-radius: 2px; background: #27272a; overflow: hidden; }
+      .stat-card .bar-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+
+      /* Toolbar */
+      .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+      .search-wrap { position: relative; flex: 1; min-width: 180px; max-width: 280px; }
+      .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+      .search-wrap input { padding-left: 30px; font-size: 13px; border-radius: 6px; padding-top: 7px; padding-bottom: 7px; }
+      .filter-row { display: flex; gap: 3px; flex-wrap: wrap; }
+      .filter-btn {
+        padding: 5px 9px; border-radius: 5px;
+        border: 1px solid transparent; background: transparent;
+        color: #52525b; font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.12s;
+      }
+      .filter-btn.active { border-color: #3f3f46; background: #27272a; color: #e4e4e7; }
+      .filter-btn:hover:not(.active) { color: #a1a1aa; }
+
+      .result-count { font-size: 12px; color: #52525b; margin-bottom: 8px; }
+
+      /* Table */
+      .table-wrap { border-radius: 10px; border: 1px solid #27272a; overflow: hidden; background: #0f0f12; }
+      .table-header, .table-row { display: grid; grid-template-columns: 2fr 110px 120px 100px; padding: 10px 16px; align-items: center; }
+      .table-header {
+        background: #18181b; border-bottom: 1px solid #27272a;
+      }
+      .table-header button {
+        background: none; border: none; color: #52525b; font-size: 11px; font-weight: 600;
+        cursor: pointer; text-align: left; padding: 0; display: flex; align-items: center; gap: 4px;
+        text-transform: uppercase; letter-spacing: 0.06em;
+      }
+      .table-header button.active { color: #a1a1aa; }
+      .table-header button .arrow { font-size: 9px; opacity: 0.7; }
+      .table-body { max-height: 560px; overflow-y: auto; }
+      .table-row { border-bottom: 1px solid #1a1a1e; transition: background 0.1s; }
+      .table-row:last-child { border-bottom: none; }
+      .table-row:hover { background: #141418; }
+      .table-row .game-name {
+        font-size: 13px; font-weight: 500; color: #d4d4d8;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 12px;
+      }
+      .table-row .playtime { font-size: 12px; color: #52525b; font-variant-numeric: tabular-nums; }
+      .table-empty { padding: 40px; text-align: center; color: #3f3f46; font-size: 13px; }
+
+      /* Badges */
+      .badge-tier, .badge-native {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+      }
+      .badge-tier .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+      /* Scrollbar */
+      .table-body::-webkit-scrollbar { width: 6px; }
+      .table-body::-webkit-scrollbar-track { background: transparent; }
+      .table-body::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+      .table-body::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
+      @media (max-width: 640px) {
+        .table-header, .table-row { grid-template-columns: 1.5fr 90px 100px 70px; padding: 8px 12px; }
+        .stat-card { min-width: 100px; }
+        .landing h1 { font-size: 24px; }
+      }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  </head>
+
+  <body>
+    <!-- Header -->
+    <div class="site-header">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="6" width="18" height="12" rx="2" stroke="#a1a1aa" stroke-width="1.5"/>
+        <path d="M8 12h2m4 0h2" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="12" cy="12" r="1" fill="#22c55e"/>
+      </svg>
+      <span class="logo-text">doyouevenlinux</span>
+      <span class="badge">beta</span>
+    </div>
+
+    <div class="container">
+      <!-- Landing -->
+      <div id="landing" class="landing">
+        <h1>Do you even Linux<span class="accent">?</span></h1>
+        <p class="subtitle">Check your Steam library's Linux compatibility. See native support and ProtonDB ratings for every game you own.</p>
+        <div class="input-row">
+          <input type="text" id="steam-input" placeholder="Steam ID, vanity name, or profile URL">
+          <button class="btn-primary" id="check-btn">Check</button>
+        </div>
+        <p class="hint">Your Steam profile and game details must be set to public.</p>
+        <div id="error-box" class="error-box" style="display:none;"></div>
+      </div>
+
+      <!-- Loading -->
+      <div id="loading" class="loading-view" style="display:none;">
+        <div class="spinner"></div>
+        <p class="msg">Fetching your Steam library and ProtonDB ratings…</p>
+        <p class="sub">This can take a minute for large libraries.</p>
+      </div>
+
+      <!-- Results -->
+      <div id="results" style="display:none;">
+        <div class="results-topbar">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="btn-back" id="back-btn">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M7.5 2.5L4 6l3.5 3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Back
+            </button>
+            <span class="steam-id-label"><span id="display-steam-id"></span></span>
+          </div>
+          <div class="avg-label">Average: <span id="avg-badge"></span></div>
+        </div>
+
+        <div class="stat-row" id="stat-row"></div>
+
+        <div class="toolbar">
+          <div class="search-wrap">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="6" cy="6" r="4.5" stroke="#52525b" stroke-width="1.3"/><path d="M9.5 9.5L12.5 12.5" stroke="#52525b" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+            <input type="search" id="search-input" placeholder="Search games…">
+          </div>
+          <div class="filter-row" id="filter-row"></div>
+        </div>
+
+        <div class="result-count" id="result-count"></div>
+
+        <div class="table-wrap">
+          <div class="table-header" id="table-header"></div>
+          <div class="table-body" id="table-body"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const TIER_CONFIG = {
+        native:   { color: "#22c55e", bg: "rgba(34,197,94,0.12)",  border: "rgba(34,197,94,0.25)",  rank: 0, label: "Native" },
+        platinum: { color: "#b9c1cc", bg: "rgba(185,193,204,0.10)", border: "rgba(185,193,204,0.20)", rank: 1, label: "Platinum" },
+        gold:     { color: "#cfb53b", bg: "rgba(207,181,59,0.10)",  border: "rgba(207,181,59,0.20)",  rank: 2, label: "Gold" },
+        silver:   { color: "#a0a0a0", bg: "rgba(160,160,160,0.10)", border: "rgba(160,160,160,0.20)", rank: 3, label: "Silver" },
+        bronze:   { color: "#cd7f32", bg: "rgba(205,127,50,0.10)",  border: "rgba(205,127,50,0.20)",  rank: 4, label: "Bronze" },
+        pending:  { color: "#6366f1", bg: "rgba(99,102,241,0.10)",  border: "rgba(99,102,241,0.20)",  rank: 5, label: "Pending" },
+        borked:   { color: "#ef4444", bg: "rgba(239,68,68,0.10)",   border: "rgba(239,68,68,0.20)",   rank: 6, label: "Borked" },
+      };
+      const FALLBACK = { color: "#525252", bg: "rgba(82,82,82,0.10)", border: "rgba(82,82,82,0.20)", rank: 99, label: "Unknown" };
+      const FILTERS = ["All", "Native", "Platinum", "Gold", "Silver", "Bronze", "Pending", "Borked"];
+      const COLUMNS = [
+        { key: "name", label: "Name" },
+        { key: "native", label: "Native Linux" },
+        { key: "rating", label: "Proton Tier" },
+        { key: "playtime", label: "Playtime" },
+      ];
+
+      let allGames = [];
+      let sortBy = "playtime";
+      let sortDir = "desc";
+      let activeFilter = "All";
+
+      // --- DOM refs ---
+      const $landing = document.getElementById("landing");
+      const $loading = document.getElementById("loading");
+      const $results = document.getElementById("results");
+      const $steamInput = document.getElementById("steam-input");
+      const $checkBtn = document.getElementById("check-btn");
+      const $errorBox = document.getElementById("error-box");
+      const $backBtn = document.getElementById("back-btn");
+      const $displayId = document.getElementById("display-steam-id");
+      const $avgBadge = document.getElementById("avg-badge");
+      const $statRow = document.getElementById("stat-row");
+      const $searchInput = document.getElementById("search-input");
+      const $filterRow = document.getElementById("filter-row");
+      const $resultCount = document.getElementById("result-count");
+      const $tableHeader = document.getElementById("table-header");
+      const $tableBody = document.getElementById("table-body");
+
+      // --- Helpers ---
+      function tierBadgeHTML(rating) {
+        const cfg = TIER_CONFIG[rating] || FALLBACK;
+        return `<span class="badge-tier" style="color:${cfg.color};background:${cfg.bg};border:1px solid ${cfg.border}"><span class="dot" style="background:${cfg.color}"></span>${cfg.label}</span>`;
+      }
+
+      function nativeBadgeHTML(isNative) {
+        if (isNative) {
+          return `<span class="badge-native" style="color:#22c55e;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.25)">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#22c55e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Native</span>`;
+        }
+        return `<span class="badge-native" style="color:#525252;background:rgba(82,82,82,0.08);border:1px solid rgba(82,82,82,0.18)">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3l-6 6" stroke="#525252" stroke-width="1.5" stroke-linecap="round"/></svg>No</span>`;
+      }
+
+      function formatPlaytime(mins) {
+        if (mins < 60) return mins + "m";
+        return Math.round(mins / 60).toLocaleString() + "h";
+      }
+
+      function statCardHTML(label, value, color, total) {
+        const pct = total ? Math.round((value / total) * 100) : 0;
+        return `<div class="stat-card">
+          <div class="label">${label}</div>
+          <div class="value-row"><span class="value" style="color:${color}">${value}</span><span class="pct">${pct}%</span></div>
+          <div class="bar"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        </div>`;
+      }
+
+      // --- View switching ---
+      function showView(view) {
+        $landing.style.display = view === "landing" ? "" : "none";
+        $loading.style.display = view === "loading" ? "" : "none";
+        $results.style.display = view === "results" ? "" : "none";
+      }
+
+      function showError(msg) {
+        $errorBox.textContent = msg;
+        $errorBox.style.display = msg ? "" : "none";
+      }
+
+      // --- Filtering & Sorting ---
+      function getFiltered() {
+        let list = [...allGames];
+
+        const q = $searchInput.value.toLowerCase().trim();
+        if (q) list = list.filter(g => g.name.toLowerCase().includes(q));
+
+        if (activeFilter !== "All") {
+          const f = activeFilter.toLowerCase();
+          if (f === "native") list = list.filter(g => g.native_linux);
+          else list = list.filter(g => g.rating === f);
+        }
+
+        list.sort((a, b) => {
+          let cmp = 0;
+          if (sortBy === "name") cmp = a.name.localeCompare(b.name);
+          else if (sortBy === "rating") {
+            cmp = ((TIER_CONFIG[a.rating] || FALLBACK).rank) - ((TIER_CONFIG[b.rating] || FALLBACK).rank);
+          }
+          else if (sortBy === "native") cmp = (b.native_linux ? 1 : 0) - (a.native_linux ? 1 : 0);
+          else if (sortBy === "playtime") cmp = b.playtime_minutes - a.playtime_minutes;
+          return sortDir === "asc" ? cmp : -cmp;
+        });
+
+        return list;
+      }
+
+      function renderTable() {
+        const filtered = getFiltered();
+
+        // Count
+        $resultCount.textContent = filtered.length + " game" + (filtered.length !== 1 ? "s" : "");
+
+        // Header
+        $tableHeader.innerHTML = COLUMNS.map(col => {
+          const isActive = sortBy === col.key;
+          const arrow = isActive ? `<span class="arrow">${sortDir === "asc" ? "↑" : "↓"}</span>` : "";
+          return `<button class="${isActive ? 'active' : ''}" data-sort="${col.key}">${col.label}${arrow}</button>`;
+        }).join("");
+
+        // Body
+        if (filtered.length === 0) {
+          $tableBody.innerHTML = `<div class="table-empty">No games match your filters.</div>`;
+          return;
+        }
+
+        $tableBody.innerHTML = filtered.map(g => `
+          <div class="table-row">
+            <span class="game-name">${escapeHTML(g.name)}</span>
+            <span>${nativeBadgeHTML(g.native_linux)}</span>
+            <span>${tierBadgeHTML(g.rating)}</span>
+            <span class="playtime">${formatPlaytime(g.playtime_minutes)}</span>
+          </div>
+        `).join("");
+      }
+
+      function renderFilters() {
+        $filterRow.innerHTML = FILTERS.map(f =>
+          `<button class="filter-btn ${activeFilter === f ? 'active' : ''}" data-filter="${f}">${f}</button>`
+        ).join("");
+      }
+
+      function renderStats() {
+        const total = allGames.length;
+        const native = allGames.filter(g => g.native_linux).length;
+        const playable = allGames.filter(g => ["native","platinum","gold"].includes(g.rating)).length;
+        const borked = allGames.filter(g => g.rating === "borked").length;
+
+        $statRow.innerHTML =
+          statCardHTML("Total Games", total, "#e4e4e7", total) +
+          statCardHTML("Native Linux", native, "#22c55e", total) +
+          statCardHTML("Playable (Gold+)", playable, "#cfb53b", total) +
+          statCardHTML("Borked", borked, "#ef4444", total);
+      }
+
+      function escapeHTML(str) {
+        const div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      // --- API call ---
+      async function checkLibrary(steamId) {
+        showError("");
+        showView("loading");
+
+        try {
+          const res = await fetch(`/api/check/${encodeURIComponent(steamId.trim())}`);
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.detail || `Error ${res.status}`);
+          }
+          const data = await res.json();
+
+          allGames = data.games.map(g => ({
+            ...g,
+            native_linux: g.rating === "native",
+          }));
+
+          // Reset state
+          sortBy = "playtime";
+          sortDir = "desc";
+          activeFilter = "All";
+          $searchInput.value = "";
+
+          $displayId.textContent = steamId;
+          $avgBadge.innerHTML = tierBadgeHTML(data.user_average);
+
+          renderStats();
+          renderFilters();
+          renderTable();
+          showView("results");
+        } catch (err) {
+          showView("landing");
+          showError(err.message || "Something went wrong");
+        }
+      }
+
+      // --- Events ---
+      $checkBtn.addEventListener("click", () => {
+        if ($steamInput.value.trim()) checkLibrary($steamInput.value);
+      });
+
+      $steamInput.addEventListener("keydown", e => {
+        if (e.key === "Enter" && $steamInput.value.trim()) checkLibrary($steamInput.value);
+      });
+
+      $backBtn.addEventListener("click", () => {
+        allGames = [];
+        showError("");
+        showView("landing");
+      });
+
+      $searchInput.addEventListener("input", renderTable);
+
+      $filterRow.addEventListener("click", e => {
+        const btn = e.target.closest("[data-filter]");
+        if (!btn) return;
+        activeFilter = btn.dataset.filter;
+        renderFilters();
+        renderTable();
+      });
+
+      $tableHeader.addEventListener("click", e => {
+        const btn = e.target.closest("[data-sort]");
+        if (!btn) return;
+        const key = btn.dataset.sort;
+        if (sortBy === key) sortDir = sortDir === "asc" ? "desc" : "asc";
+        else { sortBy = key; sortDir = "asc"; }
+        renderTable();
+      });
+
+      // Init
+      showView("landing");
+    </script>
+  </body>
+</html>
