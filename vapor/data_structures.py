@@ -8,8 +8,12 @@ from typing import NamedTuple, TypedDict
 from platformdirs import user_config_path
 from typing_extensions import NotRequired
 
-CONFIG_DIR = user_config_path(appname='vapor', appauthor='tabulate', ensure_exists=True)
+from pathlib import Path
+
 """The config directory used to write files such as config and cache."""
+# CONFIG_DIR = user_config_path(appname='vapor', appauthor='tabulate', ensure_exists=True)
+CONFIG_DIR = Path("/tmp/vapor_config")
+CONFIG_DIR.mkdir(exist_ok=True, parents=True)
 
 PRIVATE_ACCOUNT_HELP_MESSAGE = """
 Your Steam account is currently private. See README for more details.
