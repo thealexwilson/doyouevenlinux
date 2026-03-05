@@ -4,5 +4,11 @@
   ],
   "routes": [
     { "src": "/(.*)", "dest": "api/main.py" }
+  ],
+  "crons": [
+    {
+      "path": "/api/update_protondb_cache",
+      "schedule": "0 10 * * *"
+    }
   ]
 }

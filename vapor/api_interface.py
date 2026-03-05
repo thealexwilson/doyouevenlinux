@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import json
-from typing import cast
+import asyncio
+from typing import cast, List
 
 import aiohttp
 
@@ -110,32 +111,38 @@ async def get_anti_cheat_data() -> Cache | None:
 
 
 async def get_game_average_rating(app_id: str, cache: Cache) -> str:
-	"""Get the average game rating from ProtonDB.
+    """Get the average game rating from ProtonDB, using cache if available.
 
-	Args:
-		app_id (str): The game ID.
-		cache (Cache): The game cache.
+    Args:
+        app_id (str): The game ID.
+        cache (Cache): The cache object containing game & ProtonDB ratings.
 
-	Returns:
-		str: A text rating from ProtonDB. gold, bronze, silver, etc.
-	"""
-	if cache.has_game_cache:
-		game = cache.get_game_data(app_id)
-		if game is not None:
-			return game.rating
+    Returns:
+        str: A text rating from ProtonDB: gold, silver, bronze, native, etc.
+    """
+    # Check ProtonDB cache first
+    cached_rating = cache.get_protondb_rating(app_id)
+    if cached_rating is not None:
+        return cached_rating
 
-	if await check_game_is_native(app_id):
-		return 'native'
+    # Optionally, check if the game is Linux native
+    if await check_game_is_native(app_id):
+        rating = 'native'
+    else:
+        # Fetch from ProtonDB API
+        data = await async_get(f'https://www.protondb.com/api/v1/reports/summaries/{app_id}.json')
+        if data.status != HTTP_SUCCESS:
+            rating = 'pending'
+        else:
+            try:
+                json_data = cast(ProtonDBAPIResponse, json.loads(data.data))
+                rating = json_data.get('tier', 'pending')
+            except json.JSONDecodeError:
+                rating = 'pending'
 
-	data = await async_get(
-		f'https://www.protondb.com/api/v1/reports/summaries/{app_id}.json',
-	)
-	if data.status != HTTP_SUCCESS:
-		return 'pending'
-
-	json_data = cast(ProtonDBAPIResponse, json.loads(data.data))
-
-	return json_data.get('tier', 'pending')
+    # Update ProtonDB cache
+    cache.update_cache(protondb_data={app_id: rating})
+    return rating
 
 
 async def resolve_vanity_name(api_key: str, name: str) -> str:
@@ -205,63 +212,63 @@ async def get_steam_user_data(api_key: str, user_id: str) -> SteamUserData:
 
 
 async def _parse_steam_user_games(
-	data: SteamAPIUserDataResponse,
-	cache: Cache,
+    data: SteamAPIUserDataResponse,
+    cache: Cache,
 ) -> SteamUserData:
-	"""Parse user data from the Steam API and return information on their games.
+    """Parse Steam API user data, use cached ratings where possible,
+    and fetch missing ratings only for truly new app_ids.
+    """
+    game_data = data['response']
+    if 'games' not in game_data:
+        raise PrivateAccountError
 
-	Args:
-		data (SteamAPIUserDataResponse): user data from the Steam API
-		cache (Cache): the loaded Cache file
+    games = game_data['games']
+    game_ratings: list[Game] = []
 
-	Returns:
-		SteamUserData: the user's Steam games and ProtonDB ratings
+    # Collect games missing from cache
+    missing_games: list[tuple[str, str, int]] = []
 
-	Raises:
-		PrivateAccountError: if `games` is not present in `data['response']`
-			(the user's account was found but is private)
-	"""
-	game_data = data['response']
+    for game in games:
+        app_id = str(game['appid'])
+        cached_game = cache.get_game_data(app_id)
+        if cached_game:
+            # Use cached rating
+            game_ratings.append(
+                Game(
+                    name=game['name'],
+                    rating=cached_game.rating,
+                    playtime=game['playtime_forever'],
+                    app_id=app_id,
+                )
+            )
+        else:
+            # Truly missing: will need ProtonDB fetch
+            missing_games.append((game['name'], app_id, game['playtime_forever']))
 
-	if 'games' not in game_data:
-		raise PrivateAccountError
+    # Fetch ProtonDB ratings only for missing games
+    if missing_games:
+        coros = [
+            get_game_average_rating(app_id=app_id, cache=cache)
+            for _, app_id, _ in missing_games
+        ]
+        results = await asyncio.gather(*coros, return_exceptions=True)
 
-	games = game_data['games']
-	game_ratings = [
-		Game(
-			name=game['name'],
-			rating=await get_game_average_rating(str(game['appid']), cache),
-			playtime=game['playtime_forever'],
-			app_id=str(game['appid']),
-		)
-		for game in games
-	]
+        for i, (name, app_id, playtime) in enumerate(missing_games):
+            rating_result = results[i]
+            rating = str(rating_result) if not isinstance(rating_result, Exception) else "Unknown"
+            game_ratings.append(
+                Game(name=name, rating=rating, playtime=playtime, app_id=app_id)
+            )
 
-	game_ratings.sort(key=lambda x: x.playtime)
-	game_ratings.reverse()
+    # Update cache for all games
+    cache.update_cache(game_list=game_ratings)
 
-	# remove all of the games that we used that were already cached
-	# this ensures that the timestamps of those games don't get updated
-	game_ratings_copy = game_ratings.copy()
-	games_to_remove: list[Game] = [
-		game
-		for game in game_ratings_copy
-		if cache.get_game_data(game.app_id) is not None
-	]
+    # Sort by playtime descending
+    game_ratings.sort(key=lambda x: x.playtime, reverse=True)
 
-	# we do this in a seperate loop so that we're not mutating the
-	# iterable during iteration
-	for game in games_to_remove:
-		game_ratings_copy.remove(game)
+    # Compute user average only from known ratings
+    known_game_ratings = [RATING_DICT[g.rating][0] for g in game_ratings if g.rating in RATING_DICT]
+    user_average = round(sum(known_game_ratings) / len(known_game_ratings)) if known_game_ratings else 0
+    user_average_text = next((k for k, v in RATING_DICT.items() if v[0] == user_average), "Unknown")
 
-	# update the game cache
-	cache.update_cache(game_list=game_ratings)
-
-	# compute user average
-	game_rating_nums = [RATING_DICT[game.rating][0] for game in game_ratings]
-	user_average = round(sum(game_rating_nums) / len(game_rating_nums))
-	user_average_text = next(
-		key for key, value in RATING_DICT.items() if value[0] == user_average
-	)
-
-	return SteamUserData(game_ratings=game_ratings, user_average=user_average_text)
+    return SteamUserData(game_ratings=game_ratings, user_average=user_average_text)
