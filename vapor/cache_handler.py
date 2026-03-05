@@ -1,4 +1,9 @@
-"""Vapor cache handling."""
+"""Vapor cache handling.
+
+Note: This local JSON cache is ONLY used by the CLI/desktop version of Vapor.
+The web app (Vercel deployment) does not use this cache due to stateless serverless architecture.
+For web app caching, see in-memory caches in api/main.py (Phase 1) or Redis (Phase 2).
+"""
 
 from __future__ import annotations
 

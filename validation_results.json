@@ -1,0 +1,216 @@
+[
+  {
+    "app_id": "730",
+    "name": "Counter-Strike 2",
+    "our_data": {
+      "rating": "native",
+      "anticheat": "unknown"
+    },
+    "validations": {
+      "protondb": {
+        "match": true,
+        "our_rating": "native",
+        "official_rating": "N/A (native)",
+        "note": "Native games don't need ProtonDB ratings"
+      },
+      "anticheat": {
+        "match": false,
+        "our_status": "unknown",
+        "official_status": "supported"
+      },
+      "native": {
+        "match": true,
+        "our_says_native": true,
+        "steam_api_native": true
+      }
+    }
+  },
+  {
+    "app_id": "440",
+    "name": "Team Fortress 2",
+    "our_data": {
+      "rating": "native",
+      "anticheat": "unknown"
+    },
+    "validations": {
+      "protondb": {
+        "match": true,
+        "our_rating": "native",
+        "official_rating": "N/A (native)",
+        "note": "Native games don't need ProtonDB ratings"
+      },
+      "anticheat": {
+        "match": false,
+        "our_status": "unknown",
+        "official_status": "supported"
+      },
+      "native": {
+        "match": true,
+        "our_says_native": true,
+        "steam_api_native": true
+      }
+    }
+  },
+  {
+    "app_id": "570",
+    "name": "Dota 2",
+    "our_data": {
+      "rating": "native",
+      "anticheat": "unknown"
+    },
+    "validations": {
+      "protondb": {
+        "match": true,
+        "our_rating": "native",
+        "official_rating": "N/A (native)",
+        "note": "Native games don't need ProtonDB ratings"
+      },
+      "anticheat": {
+        "match": false,
+        "our_status": "unknown",
+        "official_status": "supported"
+      },
+      "native": {
+        "match": true,
+        "our_says_native": true,
+        "steam_api_native": true
+      }
+    }
+  },
+  {
+    "app_id": "219990",
+    "name": "Grim Dawn",
+    "our_data": {
+      "rating": "gold",
+      "anticheat": "unknown"
+    },
+    "validations": {
+      "protondb": {
+        "match": false,
+        "our_rating": "gold",
+        "official_rating": "platinum",
+        "total_reports": 232,
+        "distribution": {
+          "platinum": 128,
+          "gold": 36,
+          "silver": 33,
+          "borked": 30,
+          "bronze": 5
+        }
+      },
+      "anticheat": {
+        "match": true,
+        "our_status": "unknown",
+        "official_status": "not_found"
+      }
+    }
+  },
+  {
+    "app_id": "367500",
+    "name": "Dragon's Dogma: Dark Arisen",
+    "our_data": {
+      "rating": "gold",
+      "anticheat": "unknown"
+    },
+    "validations": {
+      "protondb": {
+        "match": false,
+        "our_rating": "gold",
+        "official_rating": "platinum",
+        "total_reports": 50,
+        "distribution": {
+          "gold": 15,
+          "platinum": 17,
+          "bronze": 4,
+          "borked": 2,
+          "silver": 12
+        }
+      },
+      "anticheat": {
+        "match": true,
+        "our_status": "unknown",
+        "official_status": "not_found"
+      }
+    }
+  },
+  {
+    "app_id": "292030",
+    "name": "The Witcher 3",
+    "our_data": {
+      "rating": "gold",
+      "anticheat": "unknown"
+    },
+    "validations": {
+      "protondb": {
+        "match": false,
+        "our_rating": "gold",
+        "official_rating": "platinum",
+        "total_reports": 465,
+        "distribution": {
+          "borked": 26,
+          "platinum": 340,
+          "gold": 50,
+          "silver": 39,
+          "bronze": 10
+        }
+      },
+      "anticheat": {
+        "match": true,
+        "our_status": "unknown",
+        "official_status": "not_found"
+      }
+    }
+  },
+  {
+    "app_id": "240",
+    "name": "Counter-Strike: Source",
+    "our_data": {
+      "rating": "native",
+      "anticheat": "unknown"
+    },
+    "validations": {
+      "protondb": {
+        "match": true,
+        "our_rating": "native",
+        "official_rating": "N/A (native)",
+        "note": "Native games don't need ProtonDB ratings"
+      },
+      "anticheat": {
+        "match": false,
+        "our_status": "unknown",
+        "official_status": "supported"
+      },
+      "native": {
+        "match": true,
+        "our_says_native": true,
+        "steam_api_native": true
+      }
+    }
+  },
+  {
+    "app_id": "320",
+    "name": "Half-Life 2: Deathmatch",
+    "our_data": {
+      "rating": "native",
+      "anticheat": "unknown"
+    },
+    "validations": {
+      "protondb": {
+        "match": true,
+        "our_rating": "native",
+        "official_rating": "N/A (native)",
+        "note": "Native games don't need ProtonDB ratings"
+      },
+      "anticheat": {
+        "match": false,
+        "our_status": "unknown",
+        "official_status": "supported"
+      },
+      "native": {
+        "match": true,
+        "our_says_native": true,
+        "steam_api_native": true
+      }
+    }
+  }
+]
