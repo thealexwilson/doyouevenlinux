@@ -1,0 +1,22 @@
+[
+  {
+    "app": {
+      "steam": {
+        "appId": "12345"
+      }
+    },
+    "responses": {
+      "verdict": "platinum"
+    }
+  },
+  {
+    "app": {
+      "steam": {
+        "appId": "67890"
+      }
+    },
+    "responses": {
+      "verdict": "gold"
+    }
+  }
+]
