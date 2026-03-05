@@ -1,6 +1,12 @@
-fastapi
-uvicorn
-aiohttp
+fastapi==0.135.0         # compatible with Pydantic 2.1.1
+uvicorn[standard]==0.22.0 # or your preferred uvicorn version
+aiohttp==3.8.5            # for async HTTP requests in vapor/api_interface
+python-dotenv==1.0.0      # load .env for API keys
+typing-extensions==4.15.0 # required by Pydantic
+redis
 platformdirs
-typing-extensions
-python-dotenv
+annotated-types==0.7.0
+httpx==0.24.1
+pydantic==2.7.0
+pydantic-core==2.18.1
+upstash-redis
